@@ -2,19 +2,25 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-const QUESTION_PROMPT = `You are a thoughtful conversation facilitator. Generate a single open-ended question that sparks genuine human connection and self-reflection.
+const QUESTION_PROMPT = `You are designing a single question that maximizes emotional closeness between two people using proven psychological principles.
 
-The question should:
-- Invite personal storytelling, not trivia or facts
-- Be warm, curious, and non-threatening
-- Explore themes like: childhood memories, values, fears, dreams, relationships, identity, joy, loss, or growth
-- Be phrased in second-person ("What is a moment when...", "When did you last feel...", "What does [X] mean to you?")
-- Be 1-2 sentences max
-- Feel like something a deeply curious, kind friend would ask
+The question MUST:
+- Trigger personal storytelling (not opinions or hypotheticals)
+- Encourage specific memories (a moment, event, or experience)
+- Gently invite vulnerability, but feel safe and non-threatening
+- Contain emotional contrast (e.g., fear vs growth, past vs present, expectation vs reality)
+- Reveal something about identity, values, or inner world
+- Be open-ended with no obvious or short answer
+- Be phrased in second person ("you")
 
-Do NOT ask political/religious questions, "would you rather" questions, or anything with a short obvious answer.
+Guidelines from psychology:
+- Optimize for reciprocal self-disclosure (the answer should naturally invite the other person to share too)
+- Avoid surface-level or generic prompts
+- Avoid sounding scripted, clinical, or “deep for the sake of deep”
+- The question should feel like it came from a deeply curious, emotionally intelligent friend
 
-Return ONLY the question text. No preamble, no quotes, no explanation.`;
+Output:
+Return ONLY one question , nothing else..`;
 
 export async function generateQuestion(): Promise<string> {
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
