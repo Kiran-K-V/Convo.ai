@@ -25,6 +25,7 @@ export default function RoomClient({ code }: RoomClientProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [partnerDisconnected, setPartnerDisconnected] = useState(false);
   const isCreatorRef = useRef(false);
+  const generateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { messages, addMessage, addSystemMessage } = useMessages();
 
@@ -35,6 +36,10 @@ export default function RoomClient({ code }: RoomClientProps) {
     (message: Message) => {
       addMessage(message);
       if (message.type === "question") {
+        if (generateTimeoutRef.current) {
+          clearTimeout(generateTimeoutRef.current);
+          generateTimeoutRef.current = null;
+        }
         turnState.onQuestionGenerated();
       }
     },
@@ -120,22 +125,46 @@ export default function RoomClient({ code }: RoomClientProps) {
     [session, code, addMessage, turnState]
   );
 
-  const generateQuestion = useCallback(() => {
+  const generateQuestion = useCallback(async () => {
     if (!session || turnState.isGenerating || turnState.isCoolingDown) return;
 
     turnState.startGenerating();
 
-    fetch("/api/generate-question", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        roomCode: code,
-        requesterId: session.userId,
-        requesterName: session.userName,
-      }),
-    }).catch(() => {
+    // Safety timeout: reset generating state if no Pusher event arrives within 15s
+    generateTimeoutRef.current = setTimeout(() => {
+      generateTimeoutRef.current = null;
+      turnState.stopGenerating();
+      toast.error("Question generation timed out. Please try again.");
+    }, 15000);
+
+    try {
+      const res = await fetch("/api/generate-question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomCode: code,
+          requesterId: session.userId,
+          requesterName: session.userName,
+        }),
+      });
+
+      if (!res.ok) {
+        if (generateTimeoutRef.current) {
+          clearTimeout(generateTimeoutRef.current);
+          generateTimeoutRef.current = null;
+        }
+        turnState.stopGenerating();
+        toast.error("Failed to generate question");
+      }
+      // On success, the timeout is cleared when Pusher fires onQuestionGenerated via onMessageReceived
+    } catch {
+      if (generateTimeoutRef.current) {
+        clearTimeout(generateTimeoutRef.current);
+        generateTimeoutRef.current = null;
+      }
+      turnState.stopGenerating();
       toast.error("Failed to generate question");
-    });
+    }
   }, [session, code, turnState]);
 
   const passTurn = useCallback(() => {

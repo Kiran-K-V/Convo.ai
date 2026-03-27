@@ -8,21 +8,24 @@ interface QuestionCardProps {
 }
 
 export function QuestionCard({ message }: QuestionCardProps) {
+  const time = new Date(message.timestamp).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   return (
     <motion.div
-      initial={{ scale: 0.95, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="self-center w-full max-w-md mx-auto my-2"
+      className="flex items-center gap-3 my-1 px-1"
     >
-      <div className="question-card-bg rounded-2xl border border-question-border p-5 animate-pulse-glow">
-        <div className="flex items-start gap-3">
-          <span className="text-primary text-lg flex-shrink-0 mt-0.5">✦</span>
-          <p className="text-[17px] italic leading-relaxed text-foreground/90">
-            {message.content}
-          </p>
-        </div>
-      </div>
+      <div className="h-px flex-1 bg-primary/15" />
+      <span className="flex items-center gap-1.5 text-[10px] text-primary/50 tracking-widest uppercase font-medium whitespace-nowrap">
+        <span>✦</span>
+        New Question · {time}
+      </span>
+      <div className="h-px flex-1 bg-primary/15" />
     </motion.div>
   );
 }

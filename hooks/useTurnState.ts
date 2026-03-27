@@ -32,6 +32,10 @@ export function useTurnState(myUserId: string) {
     setIsGenerating(true);
   }, []);
 
+  const stopGenerating = useCallback(() => {
+    setIsGenerating(false);
+  }, []);
+
   const isCoolingDown = Date.now() < cooldownUntil;
 
   return {
@@ -44,5 +48,6 @@ export function useTurnState(myUserId: string) {
     onMessageSent,
     onQuestionGenerated,
     startGenerating,
+    stopGenerating,
   };
 }
