@@ -165,7 +165,8 @@ export default function RoomClient({ code }: RoomClientProps) {
   }
 
   const partner = getPartner();
-  const showWaiting = members.length < 2 && !partnerDisconnected;
+  // Show waiting only when genuinely alone: no partner found AND not a reconnect scenario
+  const showWaiting = !partner && !partnerDisconnected && isConnected;
 
   return (
     <RoomProvider

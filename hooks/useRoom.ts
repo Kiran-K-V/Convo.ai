@@ -38,15 +38,21 @@ export function useRoom({
     const channel = pusher.subscribe(channelName) as PresenceChannel;
     channelRef.current = channel;
 
-    channel.bind("pusher:subscription_succeeded", (data: { members: Record<string, { name: string }> }) => {
+    channel.bind("pusher:subscription_succeeded", (members: { each: (fn: (member: { id: string; info: { name: string } }) => void) => void; me: { id: string; info: { name: string } } }) => {
       setIsConnected(true);
-      const memberList: RoomMember[] = Object.entries(data.members).map(
-        ([id, info]) => ({
-          id,
-          info: { name: (info as { name: string }).name },
-        })
-      );
+
+      const memberList: RoomMember[] = [];
+      members.each((member) => {
+        memberList.push({ id: member.id, info: { name: member.info.name } });
+      });
       setMembers(memberList);
+
+      // If joining an already-occupied room, fire onMemberAdded for the pre-existing partner
+      const myId = members.me?.id || session.userId;
+      const existingPartner = memberList.find((m) => m.id !== myId);
+      if (existingPartner) {
+        onMemberAdded(existingPartner);
+      }
     });
 
     channel.bind("pusher:member_added", (member: { id: string; info: { name: string } }) => {

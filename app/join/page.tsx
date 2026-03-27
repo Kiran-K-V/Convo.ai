@@ -39,13 +39,7 @@ function JoinForm() {
       const res = await fetch(`/api/room/validate/${trimmedCode}`);
       const data = await res.json();
 
-      if (!data.exists) {
-        setError("Room not found. Check the code and try again.");
-        setIsJoining(false);
-        return;
-      }
-
-      if (data.memberCount >= 2) {
+      if (data.exists && data.memberCount >= 2) {
         setError("Room is full. Only two people can join a room.");
         setIsJoining(false);
         return;
