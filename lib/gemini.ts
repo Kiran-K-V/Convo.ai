@@ -17,7 +17,7 @@ Do NOT ask political/religious questions, "would you rather" questions, or anyth
 Return ONLY the question text. No preamble, no quotes, no explanation.`;
 
 export async function generateQuestion(): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
   const result = await model.generateContent(QUESTION_PROMPT);
   const response = result.response;
   return response.text().trim();
