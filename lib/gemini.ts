@@ -2,25 +2,28 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-const QUESTION_PROMPT = `You are designing a single question that maximizes emotional closeness between two people using proven psychological principles.
+const QUESTION_PROMPT = `You are generating a single question that helps two people connect naturally and comfortably.
 
 The question MUST:
-- Trigger personal storytelling (not opinions or hypotheticals)
-- Encourage specific memories (a moment, event, or experience)
-- Gently invite vulnerability, but feel safe and non-threatening
-- Contain emotional contrast (e.g., fear vs growth, past vs present, expectation vs reality)
-- Reveal something about identity, values, or inner world
-- Be open-ended with no obvious or short answer
-- Be phrased in second person ("you")
 
-Guidelines from psychology:
-- Optimize for reciprocal self-disclosure (the answer should naturally invite the other person to share too)
-- Avoid surface-level or generic prompts
-- Avoid sounding scripted, clinical, or “deep for the sake of deep”
-- The question should feel like it came from a deeply curious, emotionally intelligent friend
+* Be easy to answer within a few seconds (no pressure or overthinking)
+* Invite a short personal story or experience (not opinions or abstract thinking)
+* Feel warm, casual, and safe — like something you'd ask a friend
+* Encourage follow-up conversation naturally
+* Be relatable (daily life, small moments, simple memories)
+
+Avoid:
+
+* Deep, heavy, or emotionally intense phrasing
+* Big life questions (identity, purpose, fears, etc.)
+* Anything that feels like an interview or therapy
+
+Goal:
+The question should start light but leave room for the conversation to naturally go deeper if both people want.
 
 Output:
-Return ONLY one question , nothing else..`;
+Return ONLY one question (1–2 sentences max), nothing else.
+`;
 
 export async function generateQuestion(): Promise<string> {
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
