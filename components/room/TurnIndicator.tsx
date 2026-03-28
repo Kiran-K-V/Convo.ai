@@ -14,7 +14,7 @@ export function TurnIndicator() {
   if (!currentTurnUserId) return null;
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.04] bg-surface/50">
+    <div className="flex items-center justify-between px-4 py-2 border-b border-[#ffdede]/[0.04] bg-surface/50">
       <span className="text-xs text-text-secondary">
         {isMyTurn ? (
           <span className="text-primary font-medium">✦ Your turn to ask</span>

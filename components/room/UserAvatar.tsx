@@ -15,7 +15,7 @@ export function UserAvatar({ name, isGhost = false, size = "sm" }: UserAvatarPro
   if (isGhost) {
     return (
       <div
-        className={`${sizeClasses} rounded-full border border-dashed border-white/20 flex items-center justify-center text-text-secondary animate-ghost-pulse`}
+        className={`${sizeClasses} rounded-full border border-dashed border-[#ffdede]/15 flex items-center justify-center text-text-secondary animate-ghost-pulse`}
       >
         ?
       </div>

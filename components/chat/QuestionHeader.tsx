@@ -27,11 +27,10 @@ export function QuestionHeader() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -12 }}
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        className="relative overflow-hidden border-b border-white/6"
+        className="relative overflow-hidden border-b border-[#ffdede]/[0.06]"
       >
-        {/* Ambient background glow */}
-        <div className="absolute inset-0 bg-linear-to-b from-[#0f0a20] to-[#0a0a0f]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(124,92,252,0.12),transparent)]" />
+        <div className="absolute inset-0 bg-linear-to-b from-[#0a0008] to-[#000000]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(255,11,85,0.1),transparent)]" />
 
         <div className="relative px-5 pt-4 pb-3.5">
           {/* Eyebrow label */}
@@ -50,7 +49,7 @@ export function QuestionHeader() {
               className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium border ${
                 isMe
                   ? "bg-primary/10 border-primary/25 text-primary"
-                  : "bg-white/5 border-white/10 text-text-secondary"
+                  : "bg-[#ffdede]/5 border-[#ffdede]/10 text-text-secondary"
               }`}
             >
               <span

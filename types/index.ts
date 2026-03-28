@@ -7,6 +7,12 @@ export interface Message {
   timestamp: number;
 }
 
+export interface Reaction {
+  messageId: string;
+  userId: string;
+  emoji: string;
+}
+
 export interface Session {
   userId: string;
   userName: string | null;

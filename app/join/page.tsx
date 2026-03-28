@@ -90,7 +90,7 @@ function JoinForm() {
             placeholder="XXXXXX"
             maxLength={6}
             autoFocus
-            className="h-12 rounded-xl bg-surface border-white/[0.06] text-foreground font-mono text-center text-lg tracking-[0.3em] placeholder:text-text-secondary/30 placeholder:tracking-[0.3em] focus:border-primary/50 focus:ring-primary/20"
+            className="h-12 rounded-xl bg-surface border-[#ffdede]/[0.06] text-foreground font-mono text-center text-lg tracking-[0.3em] placeholder:text-text-secondary/30 placeholder:tracking-[0.3em] focus:border-primary/40 focus:ring-primary/15"
           />
         </div>
 
@@ -105,7 +105,7 @@ function JoinForm() {
             onKeyDown={(e) => e.key === "Enter" && handleJoin()}
             placeholder="Enter your name"
             maxLength={24}
-            className="h-12 rounded-xl bg-surface border-white/[0.06] text-foreground placeholder:text-text-secondary/50 focus:border-primary/50 focus:ring-primary/20"
+            className="h-12 rounded-xl bg-surface border-[#ffdede]/[0.06] text-foreground placeholder:text-text-secondary/50 focus:border-primary/40 focus:ring-primary/15"
           />
         </div>
 
@@ -116,7 +116,7 @@ function JoinForm() {
         <Button
           onClick={handleJoin}
           disabled={!code.trim() || !name.trim() || isJoining}
-          className="h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-medium"
+          className="h-12 rounded-xl bg-primary hover:bg-[#cf0f47] text-white font-medium transition-colors"
         >
           {isJoining ? "Joining..." : "Join Room"}
         </Button>
@@ -128,7 +128,7 @@ function JoinForm() {
 export default function JoinPage() {
   return (
     <main className="min-h-dvh flex flex-col items-center justify-center animate-gradient-bg px-6">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(124,92,252,0.06)_0%,transparent_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,11,85,0.05)_0%,transparent_70%)]" />
       <Suspense fallback={null}>
         <JoinForm />
       </Suspense>

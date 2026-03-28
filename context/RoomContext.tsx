@@ -1,13 +1,14 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import { Session, RoomMember, Message } from "@/types";
+import { Session, RoomMember, Message, Reaction } from "@/types";
 
 interface RoomContextValue {
   session: Session;
   roomCode: string;
   members: RoomMember[];
   messages: Message[];
+  reactions: Reaction[];
   isConnected: boolean;
   partner: RoomMember | null;
   currentTurnUserId: string | null;
@@ -15,9 +16,15 @@ interface RoomContextValue {
   hasRespondedSinceLastQuestion: boolean;
   isCoolingDown: boolean;
   isGenerating: boolean;
+  isPartnerTyping: boolean;
+  pendingQuestion: Message | null;
+  questionCount: number;
   sendMessage: (content: string) => void;
   generateQuestion: () => void;
   passTurn: () => void;
+  dismissAnswer: () => void;
+  sendTyping: () => void;
+  addReaction: (messageId: string, emoji: string) => void;
 }
 
 const RoomContext = createContext<RoomContextValue | null>(null);

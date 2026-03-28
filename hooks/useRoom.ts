@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Channel, PresenceChannel } from "pusher-js";
 import { getPusherClient, disconnectPusher } from "@/lib/pusher-client";
-import { Session, RoomMember, Message } from "@/types";
+import { Session, RoomMember, Message, Reaction } from "@/types";
 
 interface UseRoomOptions {
   roomCode: string;
@@ -12,6 +12,8 @@ interface UseRoomOptions {
   onTurnChanged: (newTurnUserId: string) => void;
   onMemberAdded: (member: RoomMember) => void;
   onMemberRemoved: (member: RoomMember) => void;
+  onTyping: (userId: string) => void;
+  onReaction: (reaction: Reaction) => void;
 }
 
 export function useRoom({
@@ -21,6 +23,8 @@ export function useRoom({
   onTurnChanged,
   onMemberAdded,
   onMemberRemoved,
+  onTyping,
+  onReaction,
 }: UseRoomOptions) {
   const [members, setMembers] = useState<RoomMember[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -47,7 +51,6 @@ export function useRoom({
       });
       setMembers(memberList);
 
-      // If joining an already-occupied room, fire onMemberAdded for the pre-existing partner
       const myId = members.me?.id || session.userId;
       const existingPartner = memberList.find((m) => m.id !== myId);
       if (existingPartner) {
@@ -82,6 +85,16 @@ export function useRoom({
 
     channel.bind("turn:changed", (data: { newTurnUserId: string }) => {
       onTurnChanged(data.newTurnUserId);
+    });
+
+    channel.bind("typing:start", (data: { userId: string }) => {
+      if (data.userId !== session.userId) {
+        onTyping(data.userId);
+      }
+    });
+
+    channel.bind("reaction:new", (data: Reaction) => {
+      onReaction(data);
     });
 
     return () => {

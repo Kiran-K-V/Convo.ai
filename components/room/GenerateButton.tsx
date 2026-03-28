@@ -9,59 +9,46 @@ export function GenerateButton() {
     isCoolingDown,
     isGenerating,
     generateQuestion,
+    currentTurnUserId,
   } = useRoomContext();
 
-  if (!isMyTurn) {
-    return (
-      <button
-        disabled
-        className="flex items-center justify-center gap-2 rounded-xl bg-white/[0.03] border border-white/[0.04] px-4 py-3 text-sm text-text-secondary/50 cursor-not-allowed w-full sm:w-auto"
-      >
-        <svg
-          className="h-3.5 w-3.5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-          />
-        </svg>
-        {partner?.info.name || "Partner"}&apos;s turn
-      </button>
-    );
-  }
+  if (!currentTurnUserId || !partner) return null;
 
-  const disabled = isCoolingDown || isGenerating;
+  const disabled = !isMyTurn || isCoolingDown || isGenerating;
 
   return (
-    <button
-      onClick={generateQuestion}
-      disabled={disabled}
-      className={`relative flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all w-full sm:w-auto overflow-hidden ${
-        disabled
-          ? "bg-primary/20 text-primary/50 cursor-not-allowed"
-          : "bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20"
-      }`}
-    >
-      {!disabled && <div className="absolute inset-0 animate-shimmer" />}
-      <span className="relative z-10 flex items-center gap-2">
-        {isGenerating ? (
-          <>
-            Thinking
-            <span className="flex gap-0.5">
-              <span className="h-1 w-1 rounded-full bg-current dot-bounce-1" />
-              <span className="h-1 w-1 rounded-full bg-current dot-bounce-2" />
-              <span className="h-1 w-1 rounded-full bg-current dot-bounce-3" />
+    <div className="flex flex-col items-center gap-2 py-4 self-center w-full max-w-sm">
+      <button
+        onClick={generateQuestion}
+        disabled={disabled}
+        className={`relative w-full rounded-2xl px-6 py-4 text-sm font-medium transition-all overflow-hidden border ${
+          isMyTurn && !disabled
+            ? "bg-primary/10 border-primary/25 text-primary hover:bg-primary/15 shadow-lg shadow-primary/10"
+            : isMyTurn && disabled
+              ? "bg-primary/5 border-primary/15 text-primary/50 cursor-not-allowed"
+              : "bg-[#ffdede]/[0.02] border-[#ffdede]/[0.06] text-text-secondary/60 cursor-default"
+        }`}
+      >
+        {isMyTurn && !disabled && <div className="absolute inset-0 animate-shimmer" />}
+        <span className="relative z-10 flex flex-col items-center gap-1.5">
+          {isGenerating ? (
+            <span className="flex items-center gap-2">
+              Generating
+              <span className="flex gap-0.5">
+                <span className="h-1 w-1 rounded-full bg-current dot-bounce-1" />
+                <span className="h-1 w-1 rounded-full bg-current dot-bounce-2" />
+                <span className="h-1 w-1 rounded-full bg-current dot-bounce-3" />
+              </span>
             </span>
-          </>
-        ) : (
-          <>✦ Generate Question</>
-        )}
-      </span>
-    </button>
+          ) : isMyTurn ? (
+            <span className="flex items-center gap-2">✦ Generate Question</span>
+          ) : (
+            <span className="flex items-center gap-2">
+              Waiting for {partner.info.name} to ask...
+            </span>
+          )}
+        </span>
+      </button>
+    </div>
   );
 }

@@ -9,11 +9,10 @@ import { useTurnState } from "@/hooks/useTurnState";
 import { RoomProvider } from "@/context/RoomContext";
 import { RoomHeader } from "@/components/room/RoomHeader";
 import { WaitingOverlay } from "@/components/room/WaitingOverlay";
-import { TurnIndicator } from "@/components/room/TurnIndicator";
-import { GenerateButton } from "@/components/room/GenerateButton";
 import { MessageInput } from "@/components/room/MessageInput";
+import { AnswerModal } from "@/components/room/AnswerModal";
 import { ChatArea } from "@/components/chat/ChatArea";
-import { Session, RoomMember, Message } from "@/types";
+import { Session, RoomMember, Message, Reaction } from "@/types";
 import { toast } from "sonner";
 
 interface RoomClientProps {
@@ -24,13 +23,25 @@ export default function RoomClient({ code }: RoomClientProps) {
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
   const [partnerDisconnected, setPartnerDisconnected] = useState(false);
+  const [pendingQuestion, setPendingQuestion] = useState<Message | null>(null);
+  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+  const [reactions, setReactions] = useState<Reaction[]>([]);
   const isCreatorRef = useRef(false);
   const generateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const turnRef = useRef<string | null>(null);
 
   const { messages, addMessage, addSystemMessage } = useMessages();
 
   const userId = session?.userId || "";
   const turnState = useTurnState(userId);
+
+  // Keep a ref to the current turn so callbacks can read it without stale closure
+  useEffect(() => {
+    turnRef.current = turnState.currentTurnUserId;
+  }, [turnState.currentTurnUserId]);
+
+  const questionCount = messages.filter((m) => m.type === "question").length;
 
   const onMessageReceived = useCallback(
     (message: Message) => {
@@ -41,6 +52,10 @@ export default function RoomClient({ code }: RoomClientProps) {
           generateTimeoutRef.current = null;
         }
         turnState.onQuestionGenerated();
+
+        // Show answer modal for the person who did NOT generate (will be the new turn holder after auto-pass)
+        // The generator auto-passes turn, so the receiver should answer
+        setPendingQuestion(message);
       }
     },
     [addMessage, turnState]
@@ -73,6 +88,25 @@ export default function RoomClient({ code }: RoomClientProps) {
     [addSystemMessage]
   );
 
+  const onTyping = useCallback(
+    (_userId: string) => {
+      setIsPartnerTyping(true);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => setIsPartnerTyping(false), 2500);
+    },
+    []
+  );
+
+  const onReaction = useCallback((reaction: Reaction) => {
+    setReactions((prev) => {
+      const existing = prev.find(
+        (r) => r.messageId === reaction.messageId && r.userId === reaction.userId && r.emoji === reaction.emoji
+      );
+      if (existing) return prev;
+      return [...prev, reaction];
+    });
+  }, []);
+
   const { members, isConnected, getPartner } = useRoom({
     roomCode: code,
     session: session || { userId: "", userName: null },
@@ -80,6 +114,8 @@ export default function RoomClient({ code }: RoomClientProps) {
     onTurnChanged: turnState.onTurnChanged,
     onMemberAdded,
     onMemberRemoved,
+    onTyping,
+    onReaction,
   });
 
   useEffect(() => {
@@ -130,7 +166,6 @@ export default function RoomClient({ code }: RoomClientProps) {
 
     turnState.startGenerating();
 
-    // Safety timeout: reset generating state if no Pusher event arrives within 15s
     generateTimeoutRef.current = setTimeout(() => {
       generateTimeoutRef.current = null;
       turnState.stopGenerating();
@@ -148,7 +183,17 @@ export default function RoomClient({ code }: RoomClientProps) {
         }),
       });
 
-      if (!res.ok) {
+      if (res.ok) {
+        // Auto-pass turn to partner after question generated
+        const partner = getPartner();
+        if (partner) {
+          await fetch("/api/turn/pass", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ roomCode: code, toUserId: partner.id }),
+          });
+        }
+      } else {
         if (generateTimeoutRef.current) {
           clearTimeout(generateTimeoutRef.current);
           generateTimeoutRef.current = null;
@@ -156,7 +201,6 @@ export default function RoomClient({ code }: RoomClientProps) {
         turnState.stopGenerating();
         toast.error("Failed to generate question");
       }
-      // On success, the timeout is cleared when Pusher fires onQuestionGenerated via onMessageReceived
     } catch {
       if (generateTimeoutRef.current) {
         clearTimeout(generateTimeoutRef.current);
@@ -165,7 +209,7 @@ export default function RoomClient({ code }: RoomClientProps) {
       turnState.stopGenerating();
       toast.error("Failed to generate question");
     }
-  }, [session, code, turnState]);
+  }, [session, code, turnState, getPartner]);
 
   const passTurn = useCallback(() => {
     const partner = getPartner();
@@ -174,12 +218,46 @@ export default function RoomClient({ code }: RoomClientProps) {
     fetch("/api/turn/pass", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        roomCode: code,
-        toUserId: partner.id,
-      }),
+      body: JSON.stringify({ roomCode: code, toUserId: partner.id }),
     }).catch(() => toast.error("Failed to pass turn"));
   }, [code, getPartner]);
+
+  const dismissAnswer = useCallback(() => {
+    setPendingQuestion(null);
+  }, []);
+
+  const sendTyping = useCallback(() => {
+    if (!session) return;
+    fetch("/api/typing", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        roomCode: code,
+        userId: session.userId,
+        userName: session.userName,
+      }),
+    }).catch(() => {});
+  }, [session, code]);
+
+  const addReaction = useCallback(
+    (messageId: string, emoji: string) => {
+      if (!session) return;
+      const reaction: Reaction = { messageId, userId: session.userId, emoji };
+      setReactions((prev) => {
+        const existing = prev.find(
+          (r) => r.messageId === messageId && r.userId === session.userId && r.emoji === emoji
+        );
+        if (existing) return prev;
+        return [...prev, reaction];
+      });
+      fetch("/api/reaction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomCode: code, messageId, userId: session.userId, emoji }),
+      }).catch(() => {});
+    },
+    [session, code]
+  );
 
   if (!session) {
     return (
@@ -194,7 +272,6 @@ export default function RoomClient({ code }: RoomClientProps) {
   }
 
   const partner = getPartner();
-  // Show waiting only when genuinely alone: no partner found AND not a reconnect scenario
   const showWaiting = !partner && !partnerDisconnected && isConnected;
 
   return (
@@ -204,6 +281,7 @@ export default function RoomClient({ code }: RoomClientProps) {
         roomCode: code,
         members,
         messages,
+        reactions,
         isConnected,
         partner: partner || null,
         currentTurnUserId: turnState.currentTurnUserId,
@@ -211,9 +289,15 @@ export default function RoomClient({ code }: RoomClientProps) {
         hasRespondedSinceLastQuestion: turnState.hasRespondedSinceLastQuestion,
         isCoolingDown: turnState.isCoolingDown,
         isGenerating: turnState.isGenerating,
+        isPartnerTyping,
+        pendingQuestion,
+        questionCount,
         sendMessage,
         generateQuestion,
         passTurn,
+        dismissAnswer,
+        sendTyping,
+        addReaction,
       }}
     >
       <div className="flex flex-col h-dvh bg-background">
@@ -233,12 +317,11 @@ export default function RoomClient({ code }: RoomClientProps) {
           <ChatArea />
         </div>
 
-        <TurnIndicator />
-
-        <div className="flex flex-col sm:flex-row items-stretch gap-2 px-4 py-3 border-t border-white/[0.06] bg-surface/50 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-          <GenerateButton />
+        <div className="flex items-end gap-2 px-3 py-2.5 border-t border-[#ffdede]/[0.06] bg-surface/50 pb-[calc(0.625rem+env(safe-area-inset-bottom))]">
           <MessageInput />
         </div>
+
+        <AnswerModal />
       </div>
     </RoomProvider>
   );

@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function LandingPage() {
   return (
     <main className="relative min-h-dvh flex flex-col items-center justify-center overflow-hidden animate-gradient-bg">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(124,92,252,0.08)_0%,transparent_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,11,85,0.06)_0%,transparent_60%)]" />
 
       <div className="relative z-10 flex flex-col items-center gap-8 px-6 text-center">
         <div className="flex flex-col items-center gap-3">
@@ -14,7 +14,7 @@ export default function LandingPage() {
             </span>
           </div>
 
-          <h1 className="text-5xl sm:text-7xl font-bold tracking-tight bg-gradient-to-b from-white via-white/90 to-white/50 bg-clip-text text-transparent">
+          <h1 className="text-5xl sm:text-7xl font-bold tracking-tight bg-linear-to-b from-[#ffdede] via-[#ffdede]/80 to-[#ff0b55]/40 bg-clip-text text-transparent">
             Samsarikam
           </h1>
 
@@ -26,13 +26,13 @@ export default function LandingPage() {
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <Link
             href="/create"
-            className="relative inline-flex items-center justify-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-medium text-white transition-all hover:bg-primary/90 animate-pulse-glow"
+            className="relative inline-flex items-center justify-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-medium text-white transition-all hover:bg-[#cf0f47] animate-pulse-glow"
           >
             <span className="text-base">Create a Room</span>
           </Link>
           <Link
             href="/join"
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-8 py-3.5 text-sm font-medium text-white/80 backdrop-blur-sm transition-all hover:bg-white/[0.06] hover:text-white hover:border-white/20"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-[#ffdede]/10 bg-[#ffdede]/[0.02] px-8 py-3.5 text-sm font-medium text-[#ffdede]/80 backdrop-blur-sm transition-all hover:bg-[#ffdede]/[0.05] hover:text-[#ffdede] hover:border-[#ffdede]/20"
           >
             <span className="text-base">Join a Room</span>
           </Link>
@@ -46,9 +46,9 @@ export default function LandingPage() {
           ].map(({ icon, label }) => (
             <span
               key={label}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-white/[0.02] px-4 py-1.5 text-xs text-text-secondary"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#ffdede]/[0.06] bg-[#ffdede]/[0.02] px-4 py-1.5 text-xs text-text-secondary"
             >
-              <span className="text-primary/80">{icon}</span>
+              <span className="text-primary/70">{icon}</span>
               {label}
             </span>
           ))}

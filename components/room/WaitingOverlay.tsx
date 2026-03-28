@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { useRoomContext } from "@/context/RoomContext";
 import { UserAvatar } from "./UserAvatar";
 import { toast } from "sonner";
@@ -9,7 +10,7 @@ export function WaitingOverlay() {
   const { roomCode } = useRoomContext();
   const [copied, setCopied] = useState(false);
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
   const joinLink = `${appUrl}/join?code=${roomCode}`;
 
   const copyCode = async () => {
@@ -36,12 +37,10 @@ export function WaitingOverlay() {
     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-6 bg-background/80 backdrop-blur-md">
       <div className="flex items-center gap-3">
         <UserAvatar name="Y" size="md" />
-        <div className="flex flex-col items-center gap-1">
-          <div className="flex gap-1">
-            <div className="h-1 w-1 rounded-full bg-primary/50 dot-bounce-1" />
-            <div className="h-1 w-1 rounded-full bg-primary/50 dot-bounce-2" />
-            <div className="h-1 w-1 rounded-full bg-primary/50 dot-bounce-3" />
-          </div>
+        <div className="flex gap-1">
+          <div className="h-1 w-1 rounded-full bg-primary/50 dot-bounce-1" />
+          <div className="h-1 w-1 rounded-full bg-primary/50 dot-bounce-2" />
+          <div className="h-1 w-1 rounded-full bg-primary/50 dot-bounce-3" />
         </div>
         <UserAvatar name="" isGhost size="md" />
       </div>
@@ -53,7 +52,7 @@ export function WaitingOverlay() {
 
         <button
           onClick={copyCode}
-          className="group flex items-center gap-2 rounded-xl border border-white/10 bg-surface px-6 py-3 transition-all hover:border-primary/30 hover:bg-surface-elevated"
+          className="group flex items-center gap-2 rounded-xl border border-[#ffdede]/10 bg-surface px-6 py-3 transition-all hover:border-primary/30 hover:bg-surface-elevated"
         >
           <span className="font-mono text-2xl tracking-[0.3em] text-foreground">
             {roomCode}
@@ -71,7 +70,13 @@ export function WaitingOverlay() {
         </button>
       </div>
 
-      <p className="text-[11px] text-text-secondary/50 max-w-xs text-center mt-4">
+      {joinLink && (
+        <div className="rounded-xl bg-white p-3">
+          <QRCodeSVG value={joinLink} size={120} level="M" />
+        </div>
+      )}
+
+      <p className="text-[11px] text-text-secondary/50 max-w-xs text-center mt-2">
         Messages aren&apos;t saved — refreshing will clear your chat history.
       </p>
     </div>
