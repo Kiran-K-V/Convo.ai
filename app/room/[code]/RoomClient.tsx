@@ -27,6 +27,7 @@ export default function RoomClient({ code }: RoomClientProps) {
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const isCreatorRef = useRef(false);
+  const sessionRef = useRef<Session | null>(null);
   const generateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const turnRef = useRef<string | null>(null);
@@ -36,10 +37,14 @@ export default function RoomClient({ code }: RoomClientProps) {
   const userId = session?.userId || "";
   const turnState = useTurnState(userId);
 
-  // Keep a ref to the current turn so callbacks can read it without stale closure
+  // Keep refs for values needed in callbacks without stale closures
   useEffect(() => {
     turnRef.current = turnState.currentTurnUserId;
   }, [turnState.currentTurnUserId]);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
 
   const questionCount = messages.filter((m) => m.type === "question").length;
 
@@ -53,9 +58,12 @@ export default function RoomClient({ code }: RoomClientProps) {
         }
         turnState.onQuestionGenerated();
 
-        // Show answer modal for the person who did NOT generate (will be the new turn holder after auto-pass)
-        // The generator auto-passes turn, so the receiver should answer
-        setPendingQuestion(message);
+        // Only show the answer modal to the person who received the question,
+        // not the person who generated it
+        const iAsked = message.senderId === sessionRef.current?.userId;
+        if (!iAsked) {
+          setPendingQuestion(message);
+        }
       }
     },
     [addMessage, turnState]
@@ -173,6 +181,10 @@ export default function RoomClient({ code }: RoomClientProps) {
     }, 15000);
 
     try {
+      const previousQuestions = messages
+        .filter((m) => m.type === "question")
+        .map((m) => m.content);
+
       const res = await fetch("/api/generate-question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -180,6 +192,7 @@ export default function RoomClient({ code }: RoomClientProps) {
           roomCode: code,
           requesterId: session.userId,
           requesterName: session.userName,
+          previousQuestions,
         }),
       });
 
@@ -209,7 +222,7 @@ export default function RoomClient({ code }: RoomClientProps) {
       turnState.stopGenerating();
       toast.error("Failed to generate question");
     }
-  }, [session, code, turnState, getPartner]);
+  }, [session, code, turnState, getPartner, messages]);
 
   const passTurn = useCallback(() => {
     const partner = getPartner();

@@ -3,18 +3,20 @@ import { generateQuestion } from "@/lib/gemini";
 
 export async function POST(req: Request) {
   try {
-    const { roomCode, requesterId, requesterName } = await req.json();
+    const { roomCode, requesterId, requesterName, previousQuestions } = await req.json();
 
     if (!roomCode || !requesterId) {
       return Response.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const [questionText] = await Promise.all([generateQuestion()]);
+    const questionText = await generateQuestion(
+      Array.isArray(previousQuestions) ? previousQuestions : []
+    );
 
     const questionMessage = {
       id: crypto.randomUUID(),
-      senderId: "system",
-      senderName: "Samsarikam",
+      senderId: requesterId,
+      senderName: requesterName || "Someone",
       content: questionText,
       type: "question" as const,
       timestamp: Date.now(),
